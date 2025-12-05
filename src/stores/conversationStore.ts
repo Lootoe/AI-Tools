@@ -7,6 +7,7 @@ import {
     getConversation,
     getAllConversations,
     deleteConversation as deleteConversationStorage,
+    clearAllConversations as clearAllConversationsStorage,
 } from '@/utils/storage';
 
 interface ConversationState {
@@ -19,6 +20,7 @@ interface ConversationState {
     createConversation: (modelId: string) => Promise<string>;
     selectConversation: (id: string) => void;
     deleteConversation: (id: string) => Promise<void>;
+    clearAllConversations: () => Promise<void>;
     updateConversationTitle: (id: string, title: string) => Promise<void>;
 
     // 消息操作
@@ -75,6 +77,14 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
             conversations: state.conversations.filter((c) => c.id !== id),
             currentConversationId: state.currentConversationId === id ? null : state.currentConversationId,
         }));
+    },
+
+    clearAllConversations: async () => {
+        await clearAllConversationsStorage();
+        set({
+            conversations: [],
+            currentConversationId: null,
+        });
     },
 
     updateConversationTitle: async (id: string, title: string) => {
