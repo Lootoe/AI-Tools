@@ -8,6 +8,9 @@ export default {
     theme: {
         extend: {
             colors: {
+                gray: {
+                    850: '#1a1a1a',
+                },
                 border: "hsl(var(--border))",
                 input: "hsl(var(--input))",
                 ring: "hsl(var(--ring))",
@@ -46,6 +49,47 @@ export default {
                 lg: "var(--radius)",
                 md: "calc(var(--radius) - 2px)",
                 sm: "calc(var(--radius) - 4px)",
+                xl: "calc(var(--radius) + 4px)",
+                "2xl": "calc(var(--radius) + 8px)",
+            },
+            boxShadow: {
+                'glow': '0 0 20px -5px hsl(var(--primary) / 0.4)',
+                'glow-lg': '0 0 40px -10px hsl(var(--primary) / 0.5)',
+                'inner-glow': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
+            },
+            backgroundImage: {
+                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+                'mesh-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            },
+            animation: {
+                'fade-in': 'fadeIn 0.3s ease-out',
+                'slide-up': 'slideUp 0.3s ease-out',
+                'slide-down': 'slideDown 0.3s ease-out',
+                'scale-in': 'scaleIn 0.2s ease-out',
+                'shimmer': 'shimmer 2s linear infinite',
+            },
+            keyframes: {
+                fadeIn: {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' },
+                },
+                slideUp: {
+                    '0%': { opacity: '0', transform: 'translateY(10px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                slideDown: {
+                    '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                scaleIn: {
+                    '0%': { opacity: '0', transform: 'scale(0.95)' },
+                    '100%': { opacity: '1', transform: 'scale(1)' },
+                },
+                shimmer: {
+                    '0%': { backgroundPosition: '-200% 0' },
+                    '100%': { backgroundPosition: '200% 0' },
+                },
             },
         },
     },

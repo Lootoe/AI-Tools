@@ -25,19 +25,21 @@ export const Switch: React.FC<SwitchProps> = ({
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={cn(
-          'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200',
-          checked ? 'bg-primary' : 'bg-muted-foreground/30',
-          !disabled && 'hover:opacity-80'
+          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all duration-300',
+          checked 
+            ? 'bg-gradient-to-r from-violet-500 to-purple-600 shadow-lg shadow-purple-500/25' 
+            : 'bg-gray-200 dark:bg-gray-700',
+          !disabled && 'hover:opacity-90'
         )}
       >
         <span
           className={cn(
-            'pointer-events-none block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-            checked ? 'translate-x-[18px]' : 'translate-x-[2px]'
+            'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md transition-all duration-300',
+            checked ? 'translate-x-[22px]' : 'translate-x-[2px]'
           )}
         />
       </button>
-      {label && <span className="text-sm text-muted-foreground">{label}</span>}
+      {label && <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>}
     </label>
   );
 };

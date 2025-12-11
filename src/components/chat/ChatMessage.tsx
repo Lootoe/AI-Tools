@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Message } from '@/types/message';
 import { cn } from '@/utils/cn';
-import { Bot, User, Edit2, Trash2, RotateCw, Loader2, AlertCircle, Clock, StopCircle, Copy, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { User, Edit2, Trash2, RotateCw, Loader2, AlertCircle, Clock, StopCircle, Copy, Check, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 interface ChatMessageProps {
   message: Message;
@@ -33,12 +33,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       console.error('复制失败:', error);
     }
   };
+
   const isLoading = message.status === 'loading' || message.status === 'streaming';
   const hasError = message.status === 'failed' || message.status === 'timeout';
   const isInterrupted = message.status === 'interrupted';
   const isPending = message.status === 'pending';
 
-  // 获取错误提示文本
   const getErrorText = () => {
     if (message.status === 'timeout') return 'AI回复超时';
     if (message.status === 'interrupted') return '生成已中断';
@@ -46,7 +46,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     return '发送失败';
   };
 
-  // 获取状态图标
   const getStatusIcon = () => {
     if (isPending) return <Loader2 size={14} className="animate-spin" />;
     if (isLoading) return <Loader2 size={14} className="animate-spin" />;
@@ -59,29 +58,31 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <div
       className={cn(
-        'group flex gap-3 py-3',
+        'group flex gap-4 py-4 animate-fade-in',
         isUser ? 'justify-end' : 'justify-start'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className={cn(
-        'flex gap-3 max-w-[60%]',
+        'flex gap-4 max-w-[70%]',
         isUser ? 'flex-row-reverse' : 'flex-row'
       )}>
-        {/* 头像 */}
+        {/* Avatar */}
         <div className="flex-shrink-0">
           <div
             className={cn(
-              'w-8 h-8 rounded-full flex items-center justify-center',
-              isUser ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              'w-9 h-9 rounded-full flex items-center justify-center',
+              isUser 
+                ? 'bg-blue-100 text-blue-600' 
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
             )}
           >
-            {isUser ? <User size={18} /> : <Bot size={18} />}
+            {isUser ? <User size={16} /> : <Sparkles size={16} />}
           </div>
         </div>
 
-        {/* 消息气泡 */}
+        {/* Message Bubble */}
         <div className={cn(
           'flex-1 space-y-2',
           isUser ? 'items-end' : 'items-start'
@@ -89,86 +90,88 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           <div className="relative group/message">
             <div
               className={cn(
-                'rounded-2xl px-4 py-2.5 shadow-sm',
+                'rounded-2xl px-4 py-3 shadow-sm',
                 isUser
-                  ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                  : 'bg-muted/50 rounded-tl-sm',
-                (hasError || isInterrupted) && 'border border-destructive/30'
+                  ? 'bg-blue-500 text-white rounded-tr-sm'
+                  : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm',
+                (hasError || isInterrupted) && !isUser && '!bg-red-50 dark:!bg-red-900/20'
               )}
             >
-              {/* Loading状态 */}
+              {/* Loading State */}
               {isLoading && !message.content && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 size={16} className="animate-spin" />
-                  <span>{message.status === 'loading' ? '正在思考...' : '正在生成...'}</span>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 bg-purple-400 rounded-full typing-dot" />
+                    <span className="w-2 h-2 bg-purple-400 rounded-full typing-dot" />
+                    <span className="w-2 h-2 bg-purple-400 rounded-full typing-dot" />
+                  </div>
+                  <span className="text-gray-500 dark:text-gray-400">
+                    {message.status === 'loading' ? '正在思考...' : '正在生成...'}
+                  </span>
                 </div>
               )}
 
-              {/* 消息内容 */}
+              {/* Message Content */}
               {message.content && (
-                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                <p className={cn(
+                  'whitespace-pre-wrap break-words text-[15px] leading-relaxed',
+                  isUser ? 'text-white' : 'text-gray-800 dark:text-gray-200'
+                )}>
                   {message.content}
                 </p>
               )}
 
-              {/* 失败状态显示在气泡内 */}
+              {/* Error State */}
               {(hasError || isInterrupted) && (
-                <div className={cn(
-                  "flex items-center gap-1.5 text-xs mt-2 pt-2 border-t",
-                  isUser ? "border-primary-foreground/20 text-primary-foreground/80" : "border-destructive/20 text-destructive"
-                )}>
+                <div className="flex items-center gap-2 text-xs mt-3 pt-3 border-t border-red-200 dark:border-red-800/50 text-red-500 dark:text-red-400">
                   {getStatusIcon()}
                   <span>{getErrorText()}</span>
                 </div>
               )}
             </div>
             
-            {/* 操作按钮 */}
+            {/* Action Buttons */}
             {isHovered && !isLoading && (
               <div className={cn(
-                'absolute top-0 flex gap-1 opacity-0 group-hover/message:opacity-100 transition-opacity',
+                'absolute top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover/message:opacity-100 transition-all duration-200',
                 isUser ? 'right-full mr-2' : 'left-full ml-2'
               )}>
-                {/* 复制按钮 - 所有消息都有 */}
                 {message.content && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={handleCopy}
-                    className="h-7 w-7 bg-background/80 backdrop-blur"
+                    className="h-8 w-8 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all"
                   >
                     {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
                   </Button>
                 )}
-                {/* 编辑按钮 - 用户消息成功或失败都可以编辑 */}
                 {isUser && onStartEditing && (message.status === 'success' || hasError || isInterrupted) && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => onStartEditing(message.id, message.content)}
-                    className="h-7 w-7 bg-background/80 backdrop-blur"
+                    className="h-8 w-8 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all"
                   >
                     <Edit2 size={14} />
                   </Button>
                 )}
-                {/* 重新生成按钮 - AI消息成功时 */}
                 {!isUser && onRegenerate && message.status === 'success' && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => onRegenerate(message.id)}
-                    className="h-7 w-7 bg-background/80 backdrop-blur"
+                    className="h-8 w-8 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-sm hover:shadow-md transition-all"
                   >
                     <RotateCw size={14} />
                   </Button>
                 )}
-                {/* 重试按钮 - 失败或中断时显示图标 */}
                 {(hasError || isInterrupted) && onRetry && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => onRetry(message.id)}
-                    className="h-7 w-7 bg-background/80 backdrop-blur text-amber-500 hover:text-amber-600"
+                    className="h-8 w-8 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-sm hover:shadow-md text-amber-500 hover:text-amber-600 transition-all"
                     title="重试"
                   >
                     <RotateCw size={14} />
@@ -179,7 +182,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     variant="ghost"
                     size="icon"
                     onClick={() => onDelete(message.id)}
-                    className="h-7 w-7 text-destructive hover:text-destructive bg-background/80 backdrop-blur"
+                    className="h-8 w-8 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-sm hover:shadow-md text-red-500 hover:text-red-600 transition-all"
                   >
                     <Trash2 size={14} />
                   </Button>
@@ -188,10 +191,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             )}
           </div>
 
-          {/* 发送中状态提示 */}
+          {/* Pending State */}
           {isPending && (
             <div className="flex items-center gap-2 px-2">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 {getStatusIcon()}
                 <span>发送中...</span>
               </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Conversation } from '@/types/conversation';
-import { MessageSquarePlus, Trash2, Edit2, Check, X, Trash } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MessageSquarePlus, Trash2, Edit2, Check, X, Trash, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { cn } from '@/utils/cn';
 import { formatTimestamp } from '@/utils/formatters';
@@ -57,17 +57,18 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       setEditTitle('');
     }
   };
+
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-gray-50 to-white">
-      {/* 对话列表标题和操作按钮 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <span className="text-sm font-semibold text-gray-600 tracking-wide">
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200/50 dark:border-gray-700/50">
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           对话列表
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={onCreate}
-            className="p-1.5 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors duration-200"
+            className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-xl transition-all duration-200"
             title="新建对话"
           >
             <MessageSquarePlus size={18} />
@@ -75,7 +76,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           {conversations.length > 0 && (
             <button
               onClick={onClearAll}
-              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors duration-200"
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all duration-200"
               title="清空所有对话历史"
             >
               <Trash size={18} />
@@ -84,19 +85,21 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pt-2">
-        {conversations.map((conversation) => (
+      {/* List */}
+      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-2">
+        {conversations.map((conversation, index) => (
           <div
             key={conversation.id}
             className={cn(
-              'group relative px-3 py-3 mb-1 cursor-pointer transition-all duration-200 rounded-lg',
+              'group relative px-4 py-3 cursor-pointer rounded-2xl transition-all duration-300 animate-fade-in',
               currentConversationId === conversation.id
-                ? 'bg-blue-50 border border-blue-200 shadow-sm'
-                : 'hover:bg-gray-100 border border-transparent'
+                ? 'bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200/50 dark:border-purple-700/50 shadow-sm'
+                : 'hover:bg-gray-100/80 dark:hover:bg-gray-800/50 border border-transparent'
             )}
+            style={{ animationDelay: `${index * 50}ms` }}
             onClick={() => editingId !== conversation.id && onSelect(conversation.id)}
           >
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 {editingId === conversation.id ? (
                   <div className="flex items-center gap-1">
@@ -104,14 +107,14 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(conversation.id, e)}
-                      className="h-7 text-sm px-2"
+                      className="h-8 text-sm px-3 rounded-xl"
                       autoFocus
                       onClick={(e) => e.stopPropagation()}
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 flex-shrink-0"
+                      className="h-8 w-8 flex-shrink-0 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/30"
                       onClick={(e) => handleSaveEdit(conversation.id, e)}
                     >
                       <Check size={14} className="text-green-600" />
@@ -119,44 +122,44 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 flex-shrink-0"
+                      className="h-8 w-8 flex-shrink-0 rounded-xl"
                       onClick={handleCancelEdit}
                     >
-                      <X size={14} className="text-muted-foreground" />
+                      <X size={14} className="text-gray-500" />
                     </Button>
                   </div>
                 ) : (
                   <>
                     <h3 className={cn(
-                      "text-sm font-semibold truncate",
+                      "text-sm font-medium truncate transition-colors",
                       currentConversationId === conversation.id
-                        ? "text-blue-700"
-                        : "text-gray-800"
+                        ? "text-purple-700 dark:text-purple-300"
+                        : "text-gray-800 dark:text-gray-200"
                     )}>
                       {conversation.title}
                     </h3>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                       {formatTimestamp(conversation.updatedAt)}
                     </p>
                   </>
                 )}
               </div>
               {editingId !== conversation.id && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
                   <button
-                    className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-blue-100 transition-colors"
+                    className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
                     onClick={(e) => handleStartEdit(conversation, e)}
                   >
-                    <Edit2 size={14} className="text-gray-600" />
+                    <Edit2 size={13} className="text-gray-500 hover:text-purple-600" />
                   </button>
                   <button
-                    className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-red-100 transition-colors"
+                    className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(conversation.id);
                     }}
                   >
-                    <Trash2 size={14} className="text-red-500" />
+                    <Trash2 size={13} className="text-gray-500 hover:text-red-500" />
                   </button>
                 </div>
               )}
@@ -165,12 +168,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         ))}
 
         {conversations.length === 0 && (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <MessageSquarePlus size={32} className="text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-12 text-center animate-fade-in">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mb-4">
+              <MessageCircle size={28} className="text-purple-500" />
             </div>
-            <p className="text-sm text-gray-600 font-medium mb-1">还没有对话</p>
-            <p className="text-xs text-gray-500">点击上方按钮创建新对话</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-1">还没有对话</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">点击上方按钮创建新对话</p>
           </div>
         )}
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Square, Plus, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Send, Square, Paperclip, Settings, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import { Textarea } from '../ui/Textarea';
 import { ModelConfigModal } from './ModelConfigModal';
 
@@ -9,7 +9,6 @@ interface ChatInputProps {
   onStop?: () => void;
   isGenerating?: boolean;
   disabled?: boolean;
-  // 编辑模式相关
   editingMessageId?: string | null;
   editingContent?: string;
   onCancelEditing?: () => void;
@@ -31,11 +30,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isEditing = !!editingMessageId;
 
-  // 当进入编辑模式时，设置内容并聚焦
   useEffect(() => {
     if (editingMessageId && editingContent) {
       setMessage(editingContent);
-      // 延迟聚焦，确保内容已设置
       setTimeout(() => {
         textareaRef.current?.focus();
       }, 0);
@@ -45,10 +42,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const handleSubmit = () => {
     if (message.trim() && !isGenerating && !disabled) {
       if (isEditing && onConfirmEdit && editingMessageId) {
-        // 编辑模式：提交编辑
         onConfirmEdit(editingMessageId, message.trim());
       } else {
-        // 普通模式：发送新消息
         onSend(message.trim());
       }
       setMessage('');
@@ -60,16 +55,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       e.preventDefault();
       handleSubmit();
     }
-    // ESC 键取消编辑
     if (e.key === 'Escape' && isEditing) {
       handleCancelEditing();
     }
   };
 
   const handleBlur = () => {
-    // 失焦时，如果处于编辑模式且没有发送，则取消编辑并清空输入框
     if (isEditing) {
-      // 使用 setTimeout 避免点击发送按钮时触发
       setTimeout(() => {
         if (document.activeElement !== textareaRef.current) {
           handleCancelEditing();
@@ -83,7 +75,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     onCancelEditing?.();
   };
 
-  // 自动调整textarea高度
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -92,66 +83,81 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   }, [message]);
 
   return (
-    <div className="border-t bg-background/95 backdrop-blur-sm">
-      <div className="max-w-full mx-auto px-6 py-4">
-        {/* 主输入区域 */}
-        <div className="relative rounded-3xl border border-border/50 bg-muted/30 shadow-sm transition-all duration-200 hover:border-border focus-within:border-primary/40 focus-within:bg-background">
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-            placeholder={disabled ? '请先选择或创建一个对话...' : isEditing ? '编辑消息...' : '和AI聊点什么'}
-            disabled={disabled || isGenerating}
-            className="min-h-[60px] max-h-[200px] resize-none border-0 bg-transparent px-6 py-4 text-base placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:ring-offset-0"
-            rows={1}
-          />
+    <div className="relative px-4 pb-4 pt-2">
+      {/* Gradient fade effect at top */}
+      <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-t from-[#f7f7f7]/80 via-[#f7f7f7]/50 to-transparent dark:from-[#1c1c1c]/80 dark:via-[#1c1c1c]/50 dark:to-transparent pointer-events-none -translate-y-full" />
+      
+      <div className="max-w-4xl mx-auto">
+        {/* Input Container - Floating card style */}
+        <div className="relative group">
+          {/* Glow effect */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-violet-500/20 via-purple-500/20 to-indigo-500/20 rounded-3xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
           
-          {/* 底部工具栏 */}
-          <div className="flex items-center justify-between px-4 pb-3">
-            {/* 左侧功能按钮 */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowConfigModal(true)}
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
-                title="模型配置"
-              >
-                <Settings size={18} />
-              </button>
-            </div>
+          <div className="relative rounded-2xl border border-gray-200/80 dark:border-gray-700/80 bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50 group-focus-within:border-purple-300/80 dark:group-focus-within:border-purple-600/50 group-focus-within:shadow-xl group-focus-within:shadow-purple-500/10 transition-all duration-300">
+            <Textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleBlur}
+              placeholder={disabled ? '请先选择或创建一个对话...' : isEditing ? '编辑消息...' : '输入消息，开始对话...'}
+              disabled={disabled || isGenerating}
+              className="min-h-[56px] max-h-[200px] resize-none border-0 bg-transparent px-6 py-4 text-[15px] placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-0 focus:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
+              rows={1}
+            />
+            
+            {/* Toolbar */}
+            <div className="flex items-center justify-between px-4 pb-3">
+              {/* Left Actions */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setShowConfigModal(true)}
+                  className="p-2.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-xl transition-all duration-200"
+                  title="模型配置"
+                >
+                  <Settings size={18} />
+                </button>
+                <button
+                  className="p-2.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-xl transition-all duration-200"
+                  title="添加附件"
+                >
+                  <Paperclip size={18} />
+                </button>
+              </div>
 
-            {/* 右侧发送/中断按钮 */}
-            <div className="flex items-center gap-2">
-              <button className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50">
-                <Plus size={18} />
-              </button>
-              {isGenerating ? (
-                <Button
-                  onClick={onStop}
-                  size="icon"
-                  variant="destructive"
-                  className="h-9 w-9 rounded-xl"
-                  title="中断生成"
-                >
-                  <Square size={16} />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!message.trim() || disabled}
-                  size="icon"
-                  className="h-9 w-9 rounded-xl transition-all duration-200 disabled:opacity-40"
-                >
-                  <Send size={16} />
-                </Button>
-              )}
+              {/* Right Actions */}
+              <div className="flex items-center gap-2">
+                {isGenerating ? (
+                  <Button
+                    onClick={onStop}
+                    size="icon"
+                    className="h-10 w-10 rounded-xl bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 shadow-lg shadow-red-500/25 transition-all duration-200"
+                    title="中断生成"
+                  >
+                    <Square size={16} className="text-white" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!message.trim() || disabled}
+                    size="icon"
+                    className="h-10 w-10 rounded-xl bg-gradient-to-r from-violet-500 via-purple-500 to-indigo-500 hover:from-violet-600 hover:via-purple-600 hover:to-indigo-600 shadow-lg shadow-purple-500/25 disabled:opacity-40 disabled:shadow-none transition-all duration-200"
+                  >
+                    {message.trim() ? (
+                      <Send size={16} className="text-white" />
+                    ) : (
+                      <Sparkles size={16} className="text-white" />
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
+
+
       </div>
 
-      {/* 模型配置弹框 */}
       <ModelConfigModal isOpen={showConfigModal} onClose={() => setShowConfigModal(false)} />
     </div>
   );

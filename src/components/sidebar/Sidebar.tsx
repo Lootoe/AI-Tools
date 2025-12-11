@@ -37,7 +37,7 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 border-r border-gray-200 flex flex-col h-full">
+    <aside className="w-60 border-r border-gray-200/50 dark:border-gray-700/50 flex flex-col h-full bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
       <ConversationList
         conversations={conversations}
         currentConversationId={currentConversationId}
