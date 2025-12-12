@@ -154,6 +154,10 @@ export async function* callAIServiceStream(
         };
     } catch (error) {
         if (error instanceof Error) {
+            // 用户主动中断请求，不抛出错误
+            if (error.name === 'AbortError' || error.message.includes('aborted')) {
+                throw error;
+            }
             throw new Error(`流式API调用失败: ${error.message}`);
         }
         throw error;

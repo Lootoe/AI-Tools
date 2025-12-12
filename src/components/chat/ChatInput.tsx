@@ -3,6 +3,7 @@ import { Send, Square, Paperclip, Settings, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '../ui/Textarea';
 import { ModelConfigModal } from './ModelConfigModal';
+import { useModelStore } from '@/stores/modelStore';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -29,6 +30,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [showConfigModal, setShowConfigModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isEditing = !!editingMessageId;
+  const { currentModel } = useModelStore();
 
   useEffect(() => {
     if (editingMessageId && editingContent) {
@@ -109,7 +111,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             {/* Toolbar */}
             <div className="flex items-center justify-between px-4 pb-3">
               {/* Left Actions */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowConfigModal(true)}
                   className="p-2.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-xl transition-all duration-200"
@@ -123,6 +125,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 >
                   <Paperclip size={18} />
                 </button>
+                {/* Current Model Display */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800/50">
+                  <Sparkles size={14} className="text-purple-600 dark:text-purple-400" />
+                  <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                    {currentModel.name}
+                  </span>
+                </div>
               </div>
 
               {/* Right Actions */}

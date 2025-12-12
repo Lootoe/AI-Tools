@@ -121,6 +121,13 @@ export async function generateAIResponse(
         await updateMessageStatus(conversationId, assistantMessage.id, 'success');
     } catch (error) {
         const { errorType, errorMessage } = parseError(error);
+        
+        // 用户主动中断，静默处理，不显示错误
+        if (errorType === 'interrupted') {
+            await updateMessageStatus(conversationId, assistantMessage.id, 'interrupted');
+            return; // 不抛出错误
+        }
+        
         const status = getStatusFromErrorType(errorType);
         await updateMessageStatus(conversationId, assistantMessage.id, status, errorType, errorMessage);
         throw error;

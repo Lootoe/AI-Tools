@@ -18,7 +18,8 @@ export function parseError(error: unknown): ErrorResult {
 
     const message = error.message.toLowerCase();
 
-    if (error.name === 'AbortError') {
+    // 用户主动中断请求
+    if (error.name === 'AbortError' || message.includes('aborted')) {
         return {
             errorType: 'interrupted',
             errorMessage: '生成已中断',

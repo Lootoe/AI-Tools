@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Search, Check, Sparkles, Globe, Brain, RotateCcw } from 'lucide-react';
+import { X, Search, Check, Sparkles, Globe, Brain, RotateCcw, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Switch } from '@/components/ui/Switch';
 import { useModelStore } from '@/stores/modelStore';
-import { useChatStore } from '@/stores/chatStore';
 import { AVAILABLE_MODELS } from '@/types/models';
 import { cn } from '@/lib/utils';
 
@@ -15,8 +13,6 @@ interface ModelConfigModalProps {
 
 export const ModelConfigModal: React.FC<ModelConfigModalProps> = ({ isOpen, onClose }) => {
   const { currentModel, setModel, parameters, setParameters, resetParameters } = useModelStore();
-  const { webSearchEnabled, deepThinkingEnabled, setWebSearchEnabled, setDeepThinkingEnabled } =
-    useChatStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!isOpen) return null;
@@ -69,35 +65,35 @@ export const ModelConfigModal: React.FC<ModelConfigModalProps> = ({ isOpen, onCl
               </div>
             </div>
             <div className="flex-1 overflow-y-auto scrollbar-thin px-4 pb-4">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {filteredModels.map((model) => (
                   <div
                     key={model.id}
                     className={cn(
-                      'p-4 rounded-2xl cursor-pointer transition-all duration-200 border',
+                      'p-3 rounded-xl cursor-pointer transition-all duration-200 border',
                       currentModel.id === model.id
                         ? 'bg-gradient-to-r from-violet-500/10 to-purple-500/10 border-purple-300 dark:border-purple-700 shadow-sm'
                         : 'bg-white dark:bg-gray-800 border-gray-200/50 dark:border-gray-700/50 hover:border-purple-200 dark:hover:border-purple-800 hover:shadow-md'
                     )}
                     onClick={() => setModel(model)}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0">
                         <h4 className={cn(
-                          "text-sm font-medium truncate",
+                          "text-xs font-medium truncate",
                           currentModel.id === model.id ? "text-purple-700 dark:text-purple-300" : "text-gray-800 dark:text-gray-200"
                         )}>
                           {model.name}
                         </h4>
                         {model.description && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                             {model.description}
                           </p>
                         )}
                       </div>
                       {currentModel.id === model.id && (
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
-                          <Check size={14} className="text-white" />
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/25 flex-shrink-0">
+                          <Check size={12} className="text-white" />
                         </div>
                       )}
                     </div>
@@ -115,13 +111,23 @@ export const ModelConfigModal: React.FC<ModelConfigModalProps> = ({ isOpen, onCl
           {/* Right - Parameters */}
           <div className="flex-1 flex flex-col min-w-0">
             <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-6">
-              {/* Feature Toggles */}
+              {/* Feature Support Status */}
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">功能设置</h3>
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">模型能力</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-100 dark:border-blue-800/50">
+                  <div className={cn(
+                    "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                    currentModel.supportsWebSearch
+                      ? "bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-blue-100 dark:border-blue-800/50"
+                      : "bg-gray-50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700/50"
+                  )}>
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                      <div className={cn(
+                        "w-9 h-9 rounded-xl flex items-center justify-center shadow-lg",
+                        currentModel.supportsWebSearch
+                          ? "bg-gradient-to-br from-blue-500 to-cyan-500 shadow-blue-500/25"
+                          : "bg-gray-400 dark:bg-gray-600 shadow-gray-500/25"
+                      )}>
                         <Globe size={18} className="text-white" />
                       </div>
                       <div>
@@ -129,11 +135,25 @@ export const ModelConfigModal: React.FC<ModelConfigModalProps> = ({ isOpen, onCl
                         <p className="text-xs text-gray-500 dark:text-gray-400">获取最新信息</p>
                       </div>
                     </div>
-                    <Switch checked={webSearchEnabled} onChange={setWebSearchEnabled} />
+                    {currentModel.supportsWebSearch ? (
+                      <CheckCircle2 size={20} className="text-green-500 flex-shrink-0" />
+                    ) : (
+                      <XCircle size={20} className="text-gray-400 flex-shrink-0" />
+                    )}
                   </div>
-                  <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-100 dark:border-purple-800/50">
+                  <div className={cn(
+                    "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                    currentModel.supportsDeepThinking
+                      ? "bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-100 dark:border-purple-800/50"
+                      : "bg-gray-50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700/50"
+                  )}>
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/25">
+                      <div className={cn(
+                        "w-9 h-9 rounded-xl flex items-center justify-center shadow-lg",
+                        currentModel.supportsDeepThinking
+                          ? "bg-gradient-to-br from-purple-500 to-pink-500 shadow-purple-500/25"
+                          : "bg-gray-400 dark:bg-gray-600 shadow-gray-500/25"
+                      )}>
                         <Brain size={18} className="text-white" />
                       </div>
                       <div>
@@ -141,7 +161,11 @@ export const ModelConfigModal: React.FC<ModelConfigModalProps> = ({ isOpen, onCl
                         <p className="text-xs text-gray-500 dark:text-gray-400">深入推理分析</p>
                       </div>
                     </div>
-                    <Switch checked={deepThinkingEnabled} onChange={setDeepThinkingEnabled} />
+                    {currentModel.supportsDeepThinking ? (
+                      <CheckCircle2 size={20} className="text-green-500 flex-shrink-0" />
+                    ) : (
+                      <XCircle size={20} className="text-gray-400 flex-shrink-0" />
+                    )}
                   </div>
                 </div>
               </div>
