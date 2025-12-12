@@ -1,5 +1,5 @@
 import { Message } from '@/types/message';
-import { callAIService } from './api';
+import { callAIService, callAIServiceStream } from './api';
 import { generateId } from '@/utils/formatters';
 import { parseError, getStatusFromErrorType } from '@/utils/errorHandler';
 import { useModelStore } from '@/stores/modelStore';
@@ -77,7 +77,7 @@ export async function sendMessage(
 }
 
 /**
- * 生成 AI 回复
+ * 生成 AI 回复（流式）
  */
 export async function generateAIResponse(
     conversationId: string,
@@ -104,16 +104,20 @@ export async function generateAIResponse(
 
         const timeoutId = setTimeout(() => abortController.abort(), AI_RESPONSE_TIMEOUT);
 
-        const response = await callAIService({
+        let fullContent = '';
+        const stream = callAIServiceStream({
             model: currentModel.id,
             messages,
             parameters,
             signal: abortController.signal,
         });
 
-        clearTimeout(timeoutId);
+        for await (const chunk of stream) {
+            fullContent += chunk;
+            await updateMessage(conversationId, assistantMessage.id, fullContent);
+        }
 
-        await updateMessage(conversationId, assistantMessage.id, response.content);
+        clearTimeout(timeoutId);
         await updateMessageStatus(conversationId, assistantMessage.id, 'success');
     } catch (error) {
         const { errorType, errorMessage } = parseError(error);

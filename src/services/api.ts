@@ -29,7 +29,7 @@ export interface ChatResponse {
     };
 }
 
-// 统一的AI服务调用接口
+// 统一的AI服务调用接口（非流式）
 export async function callAIService(request: ChatRequest): Promise<ChatResponse> {
     try {
         const response = await axios.post(
@@ -42,7 +42,7 @@ export async function callAIService(request: ChatRequest): Promise<ChatResponse>
                 max_tokens: request.parameters.maxTokens,
                 presence_penalty: request.parameters.presencePenalty,
                 frequency_penalty: request.parameters.frequencyPenalty,
-                stream: request.stream || false,
+                stream: false,
             },
             {
                 headers: {
@@ -66,6 +66,95 @@ export async function callAIService(request: ChatRequest): Promise<ChatResponse>
     } catch (error) {
         if (axios.isAxiosError(error)) {
             throw new Error(`API调用失败: ${error.response?.data?.error?.message || error.message}`);
+        }
+        throw error;
+    }
+}
+
+// 流式AI服务调用接口
+export async function* callAIServiceStream(
+    request: ChatRequest
+): AsyncGenerator<string, ChatResponse, unknown> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': API_TOKEN,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: request.model,
+                messages: request.messages,
+                temperature: request.parameters.temperature,
+                top_p: request.parameters.topP,
+                max_tokens: request.parameters.maxTokens,
+                presence_penalty: request.parameters.presencePenalty,
+                frequency_penalty: request.parameters.frequencyPenalty,
+                stream: true,
+            }),
+            signal: request.signal,
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`API调用失败: ${error.error?.message || response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+            throw new Error('无法获取响应流');
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullContent = '';
+        let responseId = '';
+        let responseModel = '';
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine || trimmedLine === 'data: [DONE]') continue;
+                    
+                    if (trimmedLine.startsWith('data: ')) {
+                        try {
+                            const jsonStr = trimmedLine.slice(6);
+                            const data = JSON.parse(jsonStr);
+                            
+                            if (data.id) responseId = data.id;
+                            if (data.model) responseModel = data.model;
+                            
+                            const content = data.choices?.[0]?.delta?.content;
+                            if (content) {
+                                fullContent += content;
+                                yield content;
+                            }
+                        } catch (e) {
+                            console.error('解析流式数据失败:', e, trimmedLine);
+                        }
+                    }
+                }
+            }
+        } finally {
+            reader.releaseLock();
+        }
+
+        return {
+            id: responseId,
+            content: fullContent,
+            model: responseModel,
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new Error(`流式API调用失败: ${error.message}`);
         }
         throw error;
     }
