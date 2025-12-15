@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
-import { SettingsPanel } from '@/components/settings/SettingsPanel';
+import { PromptSidebar } from '@/components/prompt/PromptSidebar';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useChat } from '@/hooks/useChat';
 import { Sparkles, MessageCircle } from 'lucide-react';
@@ -96,8 +96,8 @@ export const ChatPage: React.FC = () => {
         />
       </main>
 
-      {/* Settings Panel */}
-      <SettingsPanel />
+      {/* Prompt Sidebar */}
+      <PromptSidebar />
     </div>
   );
 };

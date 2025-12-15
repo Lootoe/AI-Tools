@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Textarea } from '../ui/Textarea';
 import { ModelConfigModal } from './ModelConfigModal';
 import { useModelStore } from '@/stores/modelStore';
+import { usePromptStore } from '@/stores/promptStore';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -31,6 +32,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isEditing = !!editingMessageId;
   const { currentModel } = useModelStore();
+  const { selectedPromptId, getPromptById, selectPrompt } = usePromptStore();
+  const selectedPrompt = selectedPromptId ? getPromptById(selectedPromptId) : null;
 
   useEffect(() => {
     if (editingMessageId && editingContent) {
@@ -46,7 +49,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       if (isEditing && onConfirmEdit && editingMessageId) {
         onConfirmEdit(editingMessageId, message.trim());
       } else {
-        onSend(message.trim());
+        // 如果选中了提示词，将提示词内容附加到消息前面
+        let finalMessage = message.trim();
+        if (selectedPrompt) {
+          finalMessage = `${selectedPrompt.content}\n\n${message.trim()}`;
+        }
+        onSend(finalMessage);
       }
       setMessage('');
     }
@@ -131,6 +139,21 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                     {currentModel.name}
                   </span>
                 </div>
+                {/* Selected Prompt Display */}
+                {selectedPrompt && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800/50">
+                    <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                      {selectedPrompt.name}
+                    </span>
+                    <button
+                      onClick={() => selectPrompt(null)}
+                      className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+                      title="取消使用提示词"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Right Actions */}
