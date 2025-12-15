@@ -84,10 +84,46 @@
 ## 使用流程
 
 1. 在右侧边栏浏览提示词（显示名称和简介）
-2. 点击提示词打开编辑弹框查看完整内容
-3. 点击"使用此提示词"按钮
+2. 点击提示词卡片直接选中使用
+3. 输入框下方会显示当前选中的提示词（绿色标签）
 4. 在输入框输入你的具体问题或代码
-5. 发送消息，系统会自动将提示词内容附加到消息前面发送给 AI
+5. 发送消息，系统会自动将提示词作为 system prompt 发送给 AI
+
+## 技术实现细节
+
+### 提示词传递方式
+
+提示词不会显示在聊天消息中，而是作为系统提示（system prompt）在 API 请求中发送：
+
+1. **选中提示词**：点击提示词卡片，调用 `selectPrompt(id)` 选中
+2. **获取提示词内容**：在 `useChat` hook 中从 store 获取选中的提示词内容
+3. **构建消息历史**：在 `buildMessageHistory` 函数中，如果有系统提示词，将其作为第一条 system 消息添加
+4. **API 请求**：消息历史包含 system 消息发送给 AI 服务
+
+```typescript
+// 消息结构示例
+[
+  { role: 'system', content: '提示词内容' },  // 系统提示
+  { role: 'user', content: '用户消息1' },
+  { role: 'assistant', content: 'AI回复1' },
+  { role: 'user', content: '用户消息2' },
+  // ...
+]
+```
+
+### 关键修改点
+
+1. **chatService.ts**
+   - `sendMessage`、`generateAIResponse`、`regenerateMessage`、`retryMessage`、`editAndResend` 都支持 `systemPrompt` 参数
+   - `buildMessageHistory` 在有系统提示词时，将其添加到消息历史开头
+
+2. **useChat.ts**
+   - 从 `usePromptStore` 获取选中的提示词内容
+   - 所有调用 chatService 的地方都传递 `systemPrompt`
+
+3. **ChatInput.tsx**
+   - 移除了将提示词附加到用户消息的逻辑
+   - 用户消息保持原样，不包含提示词内容
 
 ## 数据结构
 

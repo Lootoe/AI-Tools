@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useEditingStore } from '@/stores/editingStore';
+import { usePromptStore } from '@/stores/promptStore';
 import * as chatService from '@/services/chatService';
 
 export function useChat(conversationId: string | null) {
@@ -14,9 +15,13 @@ export function useChat(conversationId: string | null) {
         cancelEditing, 
         clearEditing 
     } = useEditingStore();
+    const { selectedPromptId, getPromptById } = usePromptStore();
 
     const conversation = getCurrentConversation();
     const messages = conversation?.messages || [];
+    
+    // 获取当前选中的提示词内容
+    const systemPrompt = selectedPromptId ? getPromptById(selectedPromptId)?.content : undefined;
 
     // 创建 service 回调
     const callbacks = useMemo(() => ({
@@ -27,39 +32,39 @@ export function useChat(conversationId: string | null) {
     const handleSendMessage = useCallback(async (content: string) => {
         if (!conversationId || !content.trim()) return;
         try {
-            await chatService.sendMessage(conversationId, content.trim(), callbacks);
+            await chatService.sendMessage(conversationId, content.trim(), callbacks, systemPrompt);
         } catch (error) {
             console.error('发送消息失败:', error);
         }
-    }, [conversationId, callbacks]);
+    }, [conversationId, callbacks, systemPrompt]);
 
     const handleRegenerateMessage = useCallback(async (messageId: string) => {
         if (!conversationId) return;
         try {
-            await chatService.regenerateMessage(conversationId, messageId, callbacks);
+            await chatService.regenerateMessage(conversationId, messageId, callbacks, systemPrompt);
         } catch (error) {
             console.error('重新生成失败:', error);
         }
-    }, [conversationId, callbacks]);
+    }, [conversationId, callbacks, systemPrompt]);
 
     const handleRetryMessage = useCallback(async (messageId: string) => {
         if (!conversationId) return;
         try {
-            await chatService.retryMessage(conversationId, messageId, callbacks);
+            await chatService.retryMessage(conversationId, messageId, callbacks, systemPrompt);
         } catch (error) {
             console.error('重试失败:', error);
         }
-    }, [conversationId, callbacks]);
+    }, [conversationId, callbacks, systemPrompt]);
 
     const handleEditAndResend = useCallback(async (messageId: string, newContent: string) => {
         if (!conversationId) return;
         try {
             clearEditing();
-            await chatService.editAndResend(conversationId, messageId, newContent, callbacks);
+            await chatService.editAndResend(conversationId, messageId, newContent, callbacks, systemPrompt);
         } catch (error) {
             console.error('编辑并重新发送失败:', error);
         }
-    }, [conversationId, callbacks, clearEditing]);
+    }, [conversationId, callbacks, clearEditing, systemPrompt]);
 
     const handleDeleteMessage = useCallback(async (messageId: string) => {
         if (!conversationId) return;

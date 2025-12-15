@@ -43,13 +43,23 @@ export function createAssistantMessage(conversationId: string): Message {
 /**
  * 构建发送给 AI 的消息历史
  */
-export function buildMessageHistory(messages: Message[]) {
-    return messages
+export function buildMessageHistory(messages: Message[], systemPrompt?: string) {
+    const history = messages
         .filter(m => m.status === 'success')
         .map(m => ({
             role: m.role as 'user' | 'assistant' | 'system',
             content: m.content,
         }));
+    
+    // 如果有系统提示词，添加到消息历史的开头
+    if (systemPrompt) {
+        return [
+            { role: 'system' as const, content: systemPrompt },
+            ...history
+        ];
+    }
+    
+    return history;
 }
 
 /**
@@ -58,7 +68,8 @@ export function buildMessageHistory(messages: Message[]) {
 export async function sendMessage(
     conversationId: string,
     content: string,
-    callbacks: ChatServiceCallbacks
+    callbacks: ChatServiceCallbacks,
+    systemPrompt?: string
 ): Promise<void> {
     const { addMessage, updateMessageStatus } = useConversationStore.getState();
 
@@ -68,7 +79,7 @@ export async function sendMessage(
     try {
         await new Promise(resolve => setTimeout(resolve, 100));
         await updateMessageStatus(conversationId, userMessage.id, 'success');
-        await generateAIResponse(conversationId, callbacks);
+        await generateAIResponse(conversationId, callbacks, systemPrompt);
     } catch (error) {
         const { errorType, errorMessage } = parseError(error);
         await updateMessageStatus(conversationId, userMessage.id, 'failed', errorType, errorMessage);
@@ -81,7 +92,8 @@ export async function sendMessage(
  */
 export async function generateAIResponse(
     conversationId: string,
-    callbacks: ChatServiceCallbacks
+    callbacks: ChatServiceCallbacks,
+    systemPrompt?: string
 ): Promise<void> {
     const { currentModel, parameters } = useModelStore.getState();
     const { addMessage, getCurrentConversation, updateMessageStatus, updateMessage } = useConversationStore.getState();
@@ -99,7 +111,7 @@ export async function generateAIResponse(
     callbacks.onGeneratingChange(true);
 
     try {
-        const messages = buildMessageHistory(conversation.messages);
+        const messages = buildMessageHistory(conversation.messages, systemPrompt);
         await updateMessageStatus(conversationId, assistantMessage.id, 'streaming');
 
         const timeoutId = setTimeout(() => abortController.abort(), AI_RESPONSE_TIMEOUT);
@@ -143,7 +155,8 @@ export async function generateAIResponse(
 export async function regenerateMessage(
     conversationId: string,
     messageId: string,
-    callbacks: ChatServiceCallbacks
+    callbacks: ChatServiceCallbacks,
+    systemPrompt?: string
 ): Promise<void> {
     const { getCurrentConversation, deleteMessage } = useConversationStore.getState();
     const conversation = getCurrentConversation();
@@ -158,7 +171,7 @@ export async function regenerateMessage(
         await deleteMessage(conversationId, msg.id);
     }
 
-    await generateAIResponse(conversationId, callbacks);
+    await generateAIResponse(conversationId, callbacks, systemPrompt);
 }
 
 /**
@@ -167,7 +180,8 @@ export async function regenerateMessage(
 export async function retryMessage(
     conversationId: string,
     messageId: string,
-    callbacks: ChatServiceCallbacks
+    callbacks: ChatServiceCallbacks,
+    systemPrompt?: string
 ): Promise<void> {
     const { getCurrentConversation, deleteMessage } = useConversationStore.getState();
     const conversation = getCurrentConversation();
@@ -179,10 +193,10 @@ export async function retryMessage(
 
     if (message.role === 'user') {
         await deleteMessage(conversationId, messageId);
-        await sendMessage(conversationId, message.content, callbacks);
+        await sendMessage(conversationId, message.content, callbacks, systemPrompt);
     } else if (message.role === 'assistant') {
         await deleteMessage(conversationId, messageId);
-        await generateAIResponse(conversationId, callbacks);
+        await generateAIResponse(conversationId, callbacks, systemPrompt);
     }
 }
 
@@ -193,7 +207,8 @@ export async function editAndResend(
     conversationId: string,
     messageId: string,
     newContent: string,
-    callbacks: ChatServiceCallbacks
+    callbacks: ChatServiceCallbacks,
+    systemPrompt?: string
 ): Promise<void> {
     const { getCurrentConversation, deleteMessage, updateMessage } = useConversationStore.getState();
     const conversation = getCurrentConversation();
@@ -210,5 +225,5 @@ export async function editAndResend(
         await deleteMessage(conversationId, msg.id);
     }
 
-    await generateAIResponse(conversationId, callbacks);
+    await generateAIResponse(conversationId, callbacks, systemPrompt);
 }

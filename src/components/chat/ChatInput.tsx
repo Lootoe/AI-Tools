@@ -49,12 +49,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       if (isEditing && onConfirmEdit && editingMessageId) {
         onConfirmEdit(editingMessageId, message.trim());
       } else {
-        // 如果选中了提示词，将提示词内容附加到消息前面
-        let finalMessage = message.trim();
-        if (selectedPrompt) {
-          finalMessage = `${selectedPrompt.content}\n\n${message.trim()}`;
-        }
-        onSend(finalMessage);
+        onSend(message.trim());
       }
       setMessage('');
     }
