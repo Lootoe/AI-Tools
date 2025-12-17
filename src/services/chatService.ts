@@ -43,26 +43,27 @@ export function createAssistantMessage(conversationId: string): Message {
 
 /**
  * 构建发送给 AI 的消息历史
- * 如果消息包含图片，将图片 URL 以 markdown 格式添加到内容中
+ * 图片作为独立字段传递，不混入 content
  */
 export function buildMessageHistory(messages: Message[], systemPrompt?: string) {
     const history = messages
         .filter(m => m.status === 'success')
         .map(m => {
-            let content = m.content;
+            const result: {
+                role: 'user' | 'assistant' | 'system';
+                content: string;
+                images?: { url: string }[];
+            } = {
+                role: m.role as 'user' | 'assistant' | 'system',
+                content: m.content,
+            };
             
-            // 如果有图片，将图片 URL 添加到消息内容中
+            // 图片作为独立字段
             if (m.images && m.images.length > 0) {
-                const imageUrls = m.images.map(img => img.url).join('\n');
-                content = content 
-                    ? `${content}\n\n[图片]:\n${imageUrls}`
-                    : `[图片]:\n${imageUrls}`;
+                result.images = m.images.map(img => ({ url: img.url }));
             }
             
-            return {
-                role: m.role as 'user' | 'assistant' | 'system',
-                content,
-            };
+            return result;
         });
     
     // 如果有系统提示词，添加到消息历史的开头

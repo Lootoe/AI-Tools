@@ -46,12 +46,18 @@ export async function fetchModels(): Promise<AIModel[]> {
     return response.json();
 }
 
+// 消息中的图片
+export interface ChatMessageImage {
+    url: string;
+}
+
 // API请求接口
 export interface ChatRequest {
     model: string;
     messages: Array<{
         role: 'system' | 'user' | 'assistant';
         content: string;
+        images?: ChatMessageImage[];
     }>;
     parameters: ModelParameters;
     stream?: boolean;
