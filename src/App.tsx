@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { HomePage } from '@/pages/HomePage';
 import { ChatPage } from '@/pages/ChatPage';
-import { WorkflowPage } from '@/pages/WorkflowPage';
 import { TextToImagePage } from '@/pages/TextToImagePage';
 import { ImageToVideoPage } from '@/pages/ImageToVideoPage';
 import { useModelStore } from '@/stores/modelStore';
@@ -43,18 +42,13 @@ function App() {
               </main>
             } />
             <Route path="/chat" element={<ChatPage />} />
-            <Route path="/workflow" element={
-              <main className="flex-1 container mx-auto px-4 py-8 overflow-auto relative">
-                <WorkflowPage />
-              </main>
-            } />
             <Route path="/text-to-image" element={
               <main className="flex-1 px-4 py-4 overflow-hidden relative">
                 <TextToImagePage />
               </main>
             } />
             <Route path="/image-to-video" element={
-              <main className="flex-1 container mx-auto px-4 py-8 overflow-auto relative">
+              <main className="flex-1 px-4 py-4 overflow-hidden relative">
                 <ImageToVideoPage />
               </main>
             } />

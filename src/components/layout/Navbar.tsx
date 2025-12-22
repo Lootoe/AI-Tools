@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { MessageSquare, Workflow, Image, Video, Sparkles } from 'lucide-react';
+import { MessageSquare, Image, Video, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -9,18 +9,13 @@ const navItems = [
     icon: MessageSquare,
   },
   {
-    path: '/workflow',
-    label: '工作流',
-    icon: Workflow,
-  },
-  {
     path: '/text-to-image',
-    label: '文生图',
+    label: '图片生成',
     icon: Image,
   },
   {
     path: '/image-to-video',
-    label: '图生视频',
+    label: '视频生成',
     icon: Video,
   },
 ];

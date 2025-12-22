@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Workflow, ImagePlus, Video, ArrowRight, Sparkles } from 'lucide-react';
+import { MessageSquare, ImagePlus, Video, ArrowRight, Sparkles } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,15 +15,7 @@ export const HomePage: React.FC = () => {
       shadowColor: 'shadow-violet-500/25',
     },
     {
-      title: '工作流',
-      description: '自动化流程',
-      icon: Workflow,
-      path: '/workflow',
-      gradient: 'from-emerald-500 via-teal-500 to-cyan-500',
-      shadowColor: 'shadow-emerald-500/25',
-    },
-    {
-      title: '文生图',
+      title: '图片生成',
       description: '文字生成图片',
       icon: ImagePlus,
       path: '/text-to-image',
@@ -31,7 +23,7 @@ export const HomePage: React.FC = () => {
       shadowColor: 'shadow-orange-500/25',
     },
     {
-      title: '图生视频',
+      title: '视频生成',
       description: '图片转视频',
       icon: Video,
       path: '/image-to-video',
