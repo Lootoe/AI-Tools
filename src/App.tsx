@@ -5,7 +5,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { HomePage } from '@/pages/HomePage';
 import { ChatPage } from '@/pages/ChatPage';
 import { TextToImagePage } from '@/pages/TextToImagePage';
-import { ImageToVideoPage } from '@/pages/ImageToVideoPage';
+import { VideoGenerationPage } from '@/pages/VideoGenerationPage';
 import { useModelStore } from '@/stores/modelStore';
 
 const queryClient = new QueryClient({
@@ -47,9 +47,9 @@ function App() {
                 <TextToImagePage />
               </main>
             } />
-            <Route path="/image-to-video" element={
+            <Route path="/ai-comic" element={
               <main className="flex-1 px-4 py-4 overflow-hidden relative">
-                <ImageToVideoPage />
+                <VideoGenerationPage />
               </main>
             } />
           </Routes>

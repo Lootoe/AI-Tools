@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { MessageSquare, Image, Video, Sparkles } from 'lucide-react';
+import { MessageSquare, Image, Sparkles, Clapperboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -14,9 +14,9 @@ const navItems = [
     icon: Image,
   },
   {
-    path: '/image-to-video',
-    label: '视频生成',
-    icon: Video,
+    path: '/ai-comic',
+    label: 'AI漫剧',
+    icon: Clapperboard,
   },
 ];
 
