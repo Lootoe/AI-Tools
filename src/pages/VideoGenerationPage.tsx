@@ -14,9 +14,13 @@ export const VideoGenerationPage: React.FC = () => {
     loadScripts();
   }, [loadScripts]);
 
-  // 当剧本变化时，重置选中的剧集
+  // 当剧本变化时，自动选择第1集
   useEffect(() => {
-    setSelectedEpisodeId(null);
+    if (script && script.episodes.length > 0) {
+      setSelectedEpisodeId(script.episodes[0].id);
+    } else {
+      setSelectedEpisodeId(null);
+    }
   }, [script?.id]);
 
   const selectedEpisode = script?.episodes.find((e) => e.id === selectedEpisodeId);

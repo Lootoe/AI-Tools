@@ -62,7 +62,9 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
   loadScripts: () => {
     const scripts = loadScripts();
-    set({ scripts });
+    // 自动选择第1个剧本
+    const currentScriptId = scripts.length > 0 ? scripts[0].id : null;
+    set({ scripts, currentScriptId });
   },
 
   createScript: (title?: string) => {
