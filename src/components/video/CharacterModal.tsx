@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Save, Play, Loader2, RefreshCw, User, Settings2, ImagePlus, Trash2 } from 'lucide-react';
+import { X, Save, Play, Loader2, RefreshCw, User, ImagePlus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -15,14 +15,14 @@ interface AdvancedSettings {
 
 // 尺寸选项
 const ASPECT_RATIO_OPTIONS = [
-  { value: '9:16', label: '竖屏 9:16', desc: '720×1280' },
-  { value: '16:9', label: '横屏 16:9', desc: '1280×720' },
+  { value: '9:16', label: '竖屏', desc: '720×1280' },
+  { value: '16:9', label: '横屏', desc: '1280×720' },
 ] as const;
 
 // 时长选项
 const DURATION_OPTIONS = [
-  { value: '10', label: '10s' },
-  { value: '15', label: '15s' },
+  { value: '10', label: '10秒' },
+  { value: '15', label: '15秒' },
 ] as const;
 
 // 轮询间隔（毫秒）
@@ -89,15 +89,13 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
       }
 
       switch (status) {
-        case 'SUCCESS':
-          // 生成成功
+        case 'SUCCESS': {
           clearPolling();
           const newVideoUrl = data?.output;
           setVideoUrl(newVideoUrl);
           setIsGenerating(false);
           setProgress(0);
           
-          // 更新角色数据，清除 taskId
           if (isEditing && onUpdate && newVideoUrl) {
             onUpdate({
               videoUrl: newVideoUrl,
@@ -106,15 +104,14 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
             });
           }
           break;
+        }
 
         case 'FAILURE':
-          // 生成失败
           clearPolling();
           setIsGenerating(false);
           setProgress(0);
           setError(fail_reason || '视频生成失败，请重试');
           
-          // 更新角色状态，清除 taskId
           if (isEditing && onUpdate) {
             onUpdate({
               status: 'failed',
@@ -126,7 +123,6 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
         case 'NOT_START':
         case 'IN_PROGRESS':
         default:
-          // 继续轮询
           pollTimerRef.current = window.setTimeout(() => {
             pollTaskStatus(taskId);
           }, POLL_INTERVAL);
@@ -134,14 +130,12 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
       }
     } catch (err) {
       console.error('轮询任务状态失败:', err);
-      // 出错时继续轮询，但不要无限重试
       pollTimerRef.current = window.setTimeout(() => {
         pollTaskStatus(taskId);
       }, POLL_INTERVAL);
     }
   }, [clearPolling, isEditing, onUpdate]);
 
-  // 组件卸载时清理
   useEffect(() => {
     return () => {
       clearPolling();
@@ -155,12 +149,10 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
       setVideoUrl(character.videoUrl);
       setThumbnailUrl(character.thumbnailUrl);
       
-      // 如果有 taskId 且状态是 generating，恢复轮询
       if (character.taskId && character.status === 'generating') {
         taskIdRef.current = character.taskId;
         setIsGenerating(true);
         setProgress(0);
-        // 立即开始轮询
         pollTaskStatus(character.taskId);
       }
     }
@@ -179,9 +171,7 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
   const handleGenerate = async () => {
     if (!description.trim()) return;
     
-    // 清理之前的轮询
     clearPolling();
-    
     setIsGenerating(true);
     setError(null);
     setProgress(0);
@@ -197,12 +187,10 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
       });
 
       if (response.success && response.data?.task_id) {
-        // 保存 taskId 并开始轮询
         const taskId = response.data.task_id;
         taskIdRef.current = taskId;
         setProgress(0);
         
-        // 更新角色状态和 taskId
         if (isEditing && onUpdate) {
           onUpdate({
             status: 'generating',
@@ -210,7 +198,6 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
           });
         }
         
-        // 开始轮询任务状态
         pollTimerRef.current = window.setTimeout(() => {
           pollTaskStatus(taskId);
         }, POLL_INTERVAL);
@@ -247,8 +234,10 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
     setAdvancedSettings(prev => ({ ...prev, referenceImage: null }));
   };
 
-  // 根据选择的比例计算预览区域样式
   const isVertical = advancedSettings.aspectRatio === '9:16';
+
+  // 获取角色头像（从视频截图或缩略图）
+  const avatarUrl = thumbnailUrl || (videoUrl ? undefined : undefined);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -266,143 +255,14 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
           </button>
         </div>
 
-        {/* 内容区域 */}
-        <div className="p-6">
-          <div className="flex gap-6">
-            {/* 左侧 - 表单 */}
-            <div className="flex-1 space-y-4">
-              {/* 角色名称 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  角色名称 <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="给角色起个名字"
-                  autoFocus
-                />
-              </div>
-
-              {/* 角色描述 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  角色描述
-                </label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="描述角色的外貌、服装、动作等特征..."
-                  className="h-24 resize-none"
-                />
-              </div>
-
-              {/* 高级设置 - 平铺展示 */}
-              <div className="pt-2">
-                <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  <Settings2 size={14} />
-                  <span>生成设置</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  {/* 时长 */}
-                  <div>
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">时长</label>
-                    <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-                      {DURATION_OPTIONS.map(option => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setAdvancedSettings(prev => ({ ...prev, duration: option.value }))}
-                          className={`flex-1 py-1.5 text-sm font-medium transition-colors ${
-                            advancedSettings.duration === option.value
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 尺寸 */}
-                  <div>
-                    <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">尺寸</label>
-                    <div className="flex rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-                      {ASPECT_RATIO_OPTIONS.map(option => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setAdvancedSettings(prev => ({ ...prev, aspectRatio: option.value }))}
-                          className={`flex-1 py-1.5 text-sm font-medium transition-colors ${
-                            advancedSettings.aspectRatio === option.value
-                              ? 'bg-purple-500 text-white'
-                              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 参考图 */}
-                <div className="mt-4">
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">参考图（可选）</label>
-                  <div className="flex items-start gap-3">
-                    {advancedSettings.referenceImage ? (
-                      <div className="relative group">
-                        <img
-                          src={advancedSettings.referenceImage}
-                          alt="参考图"
-                          className="w-16 h-16 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleRemoveReferenceImage}
-                          className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all"
-                        >
-                          <Trash2 size={10} />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex items-center justify-center w-16 h-16 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleReferenceImageUpload}
-                          className="hidden"
-                          disabled={isUploadingRef}
-                        />
-                        {isUploadingRef ? (
-                          <Loader2 size={18} className="text-purple-500 animate-spin" />
-                        ) : (
-                          <ImagePlus size={18} className="text-gray-400" />
-                        )}
-                      </label>
-                    )}
-                    <span className="text-xs text-gray-400 dark:text-gray-500 pt-1">
-                      上传参考图让生成效果更精准
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 错误提示 */}
-              {error && (
-                <div className="p-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg">
-                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-                </div>
-              )}
-            </div>
-
-            {/* 右侧 - 预览区域 */}
-            <div className="flex flex-col items-center">
-              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5 self-start">预览</label>
+        {/* 内容区域 - 左右两栏 */}
+        <div className="flex">
+          {/* 左侧 - 视频预览 + 生成设置 + 生成按钮 */}
+          <div className="w-80 p-6 border-r border-gray-100 dark:border-gray-700">
+            {/* 视频预览区域 - 固定高度容器 */}
+            <div className="h-64 flex items-center justify-center mb-5">
               <div 
-                className={`relative bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden flex items-center justify-center ${
+                className={`relative bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-300 ${
                   isVertical ? 'w-36 h-64' : 'w-64 h-36'
                 }`}
               >
@@ -410,7 +270,6 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                   <div className="flex flex-col items-center justify-center text-center p-4 w-full">
                     {/* 圆形进度 */}
                     <div className="relative w-20 h-20 mb-3">
-                      {/* 背景圆环 */}
                       <svg className="w-full h-full -rotate-90">
                         <circle
                           cx="40"
@@ -421,7 +280,6 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                           strokeWidth="6"
                           className="text-gray-200 dark:text-gray-600"
                         />
-                        {/* 进度圆环 */}
                         <circle
                           cx="40"
                           cy="40"
@@ -441,7 +299,6 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                           </linearGradient>
                         </defs>
                       </svg>
-                      {/* 中心百分比 */}
                       <div className="absolute inset-0 flex items-center justify-center">
                         <span className="text-lg font-semibold text-purple-600 dark:text-purple-400">
                           {progress}%
@@ -458,56 +315,220 @@ export const CharacterModal: React.FC<CharacterModalProps> = ({
                     className="w-full h-full object-cover"
                     controls
                   />
-                ) : thumbnailUrl ? (
-                  <img
-                    src={thumbnailUrl}
-                    alt={name || '角色预览'}
-                    className="w-full h-full object-cover"
-                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
-                    <User size={32} className="mb-1 opacity-50" />
-                    <span className="text-xs">等待生成</span>
+                    <Play size={40} className="mb-2 opacity-30" />
+                    <span className="text-xs">视频预览</span>
                   </div>
                 )}
               </div>
+            </div>
 
-              {/* 生成/重新生成按钮 */}
-              <Button
-                onClick={handleGenerate}
-                disabled={!description.trim() || isGenerating}
-                variant={videoUrl ? 'outline' : 'default'}
-                size="sm"
-                className="mt-3 w-full"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 size={14} className="mr-1.5 animate-spin" />
-                    生成中
-                  </>
-                ) : videoUrl ? (
-                  <>
-                    <RefreshCw size={14} className="mr-1.5" />
-                    重新生成
-                  </>
+            {/* 生成设置 */}
+            <div className="space-y-3.5">
+              {/* 标题 */}
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent"></div>
+                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  生成设置
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-600 to-transparent"></div>
+              </div>
+              
+              {/* 时长和尺寸 */}
+              <div className="space-y-3">
+                {/* 时长 */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    视频时长
+                  </label>
+                  <div className="flex gap-2">
+                    {DURATION_OPTIONS.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setAdvancedSettings(prev => ({ ...prev, duration: option.value }))}
+                        className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors ${
+                          advancedSettings.duration === option.value
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 尺寸 */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                    视频尺寸
+                  </label>
+                  <div className="flex gap-2">
+                    {ASPECT_RATIO_OPTIONS.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setAdvancedSettings(prev => ({ ...prev, aspectRatio: option.value }))}
+                        className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors ${
+                          advancedSettings.aspectRatio === option.value
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 参考图 */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                  参考图片
+                </label>
+                <div className="flex items-center gap-2.5">
+                  {advancedSettings.referenceImage ? (
+                    <div className="relative group">
+                      <img
+                        src={advancedSettings.referenceImage}
+                        alt="参考图"
+                        className="w-14 h-14 object-cover rounded-lg border-2 border-purple-200 dark:border-purple-800 shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveReferenceImage}
+                        className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-all shadow-md"
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center w-14 h-14 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleReferenceImageUpload}
+                        className="hidden"
+                        disabled={isUploadingRef}
+                      />
+                      {isUploadingRef ? (
+                        <Loader2 size={16} className="text-purple-500 animate-spin" />
+                      ) : (
+                        <ImagePlus size={16} className="text-gray-400" />
+                      )}
+                    </label>
+                  )}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    可选，上传参考图让生成效果更精准
+                  </span>
+                </div>
+              </div>
+
+              {/* 错误提示 */}
+              {error && (
+                <div className="p-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg">
+                  <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              {/* 按钮组 */}
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!description.trim() || isGenerating}
+                  variant={videoUrl ? 'outline' : 'default'}
+                  size="sm"
+                  className="flex-1"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 size={14} className="mr-1.5 animate-spin" />
+                      生成中
+                    </>
+                  ) : videoUrl ? (
+                    <>
+                      <RefreshCw size={14} className="mr-1.5" />
+                      重新生成
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} className="mr-1.5" />
+                      生成视频
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={!videoUrl || isGenerating}
+                  className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-400"
+                >
+                  <Save size={14} className="mr-1.5" />
+                  确认形象
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* 右侧 - 角色头像 + 名称 + 描述 */}
+          <div className="flex-1 p-6 flex flex-col">
+            {/* 角色头像 */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center overflow-hidden shadow-lg">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={name || '角色头像'}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <>
-                    <Play size={14} className="mr-1.5" />
-                    生成视频
-                  </>
+                  <User size={40} className="text-purple-300 dark:text-purple-600" />
                 )}
-              </Button>
+              </div>
+              {/* 角色名称预览 */}
+              <div className="mt-3 text-center">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {name || '未命名角色'}
+                </span>
+              </div>
+            </div>
+
+            {/* 角色名称输入 */}
+            <div className="mb-4">
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                角色名称 <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="给角色起个名字"
+              />
+            </div>
+
+            {/* 角色描述 */}
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                角色描述
+              </label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="描述角色的外貌、服装、动作等特征，用于生成角色视频..."
+                className="h-full min-h-[160px] resize-none"
+              />
             </div>
           </div>
         </div>
 
         {/* 底部操作 */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
           <Button variant="ghost" onClick={onClose}>
             取消
           </Button>
           <Button onClick={handleSave} disabled={!name.trim()}>
-            <Save size={14} className="mr-1.5" />
+            <Save size={16} className="mr-2" />
             保存角色
           </Button>
         </div>
