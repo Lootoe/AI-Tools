@@ -10,6 +10,12 @@ export interface Character {
   taskId?: string;         // sora2 任务ID，用于恢复轮询
   status: 'pending' | 'generating' | 'completed' | 'failed';
   createdAt: number;
+  // Sora2 角色信息
+  characterId?: string;    // Sora2 角色ID（例如 ch_xxx）
+  username?: string;       // Sora2 角色用户名
+  permalink?: string;      // Sora2 角色主页链接
+  profilePictureUrl?: string; // Sora2 角色头像URL
+  isCreatingCharacter?: boolean; // 是否正在创建角色（确认形象中）
 }
 
 // 分镜

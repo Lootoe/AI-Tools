@@ -77,6 +77,54 @@ export async function getVideoStatus(taskId: string): Promise<Sora2VideoResponse
   return response.json();
 }
 
+// Sora2 创建角色请求
+export interface CreateCharacterRequest {
+  timestamps: string; // 例如 '1,2' 表示视频的1～2秒，范围差值最大3秒最小1秒
+  url?: string; // 视频URL（包含需要创建的角色，视频必须有声音、有角色）
+  from_task?: string; // 任务ID（根据已生成的任务创建角色）
+}
+
+// Sora2 创建角色响应
+export interface CreateCharacterResponse {
+  success: boolean;
+  data: {
+    id: string; // 角色ID，例如 "ch_691155df38588191b3ae5f2d390a4359"
+    username: string; // 角色用户名
+    permalink: string; // 角色主页链接
+    profile_picture_url: string; // 角色头像URL
+  };
+}
+
+// 创建 Sora2 角色
+export async function createSora2Character(request: CreateCharacterRequest): Promise<CreateCharacterResponse> {
+  const token = getAuthToken();
+
+  // 验证参数
+  if (!request.url && !request.from_task) {
+    throw new Error('url 和 from_task 必须提供其中一个');
+  }
+
+  const response = await fetch(`${BACKEND_URL}/api/videos/characters`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({
+      timestamps: request.timestamps,
+      ...(request.url ? { url: request.url } : {}),
+      ...(request.from_task ? { from_task: request.from_task } : {}),
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(`创建角色失败: ${error.error || error.message || response.statusText}`);
+  }
+
+  return response.json();
+}
+
 // ============ 图片生成相关 ============
 
 // 图片生成请求

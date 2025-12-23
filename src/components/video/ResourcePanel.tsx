@@ -182,14 +182,15 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
                     className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors group"
                   >
                     <div className="flex items-start gap-3">
-                      {character.thumbnailUrl ? (
+                      {/* 优先显示 Sora2 头像，其次是缩略图 */}
+                      {(character.profilePictureUrl || character.thumbnailUrl) ? (
                         <img
-                          src={character.thumbnailUrl}
+                          src={character.profilePictureUrl || character.thumbnailUrl}
                           alt={character.name}
-                          className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                           {character.name.charAt(0)}
                         </div>
                       )}
@@ -213,14 +214,17 @@ export const ResourcePanel: React.FC<ResourcePanelProps> = ({
                             {character.description}
                           </p>
                         )}
+                        {/* 状态标签 - 根据是否有 characterId 判断是否已认证 */}
                         <span className={cn(
                           'inline-block text-xs px-1.5 py-0.5 rounded mt-1',
-                          character.status === 'completed' && 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+                          character.characterId && 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+                          !character.characterId && character.status === 'completed' && 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400',
                           character.status === 'generating' && 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
                           character.status === 'pending' && 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
                           character.status === 'failed' && 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                         )}>
-                          {character.status === 'completed' && '已完成'}
+                          {character.characterId && '已认证'}
+                          {!character.characterId && character.status === 'completed' && '待认证'}
                           {character.status === 'generating' && '生成中'}
                           {character.status === 'pending' && '待生成'}
                           {character.status === 'failed' && '失败'}

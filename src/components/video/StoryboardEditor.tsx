@@ -122,7 +122,7 @@ export const StoryboardEditor: React.FC<StoryboardEditorProps> = ({ episode }) =
 
       {/* 分镜列表 */}
       <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
-        <div className="grid grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 xl:grid-cols-4 gap-3 items-start">
           {/* 空状态 */}
           {episode.storyboards.length === 0 && (
             <div className="col-span-3 xl:col-span-4 flex flex-col items-center justify-center py-16 text-center">
@@ -201,22 +201,29 @@ export const StoryboardEditor: React.FC<StoryboardEditorProps> = ({ episode }) =
                     {storyboard.description || '点击编辑分镜脚本...'}
                   </p>
 
-                  {/* 角色标签 - 固定高度确保对齐 */}
-                  <div className="flex flex-wrap gap-1 mb-2 h-[22px] overflow-hidden">
+                  {/* 角色标签 */}
+                  <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
                     {selectedCharacters.length === 0 ? (
                       <span className="text-xs text-gray-400">暂无角色</span>
                     ) : (
                       selectedCharacters.map((char) => char && (
                         <span
                           key={char.id}
-                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded text-xs"
+                          className="inline-flex items-center gap-1.5 px-2 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded-md text-xs"
                         >
+                          {(char.profilePictureUrl || char.thumbnailUrl) && (
+                            <img
+                              src={char.profilePictureUrl || char.thumbnailUrl}
+                              alt={char.name}
+                              className="w-5 h-5 rounded-full object-cover"
+                            />
+                          )}
                           {char.name}
                           <button
                             onClick={() => handleRemoveCharacter(storyboard.id, char.id)}
                             className="hover:text-red-500 transition-colors"
                           >
-                            <X size={10} />
+                            <X size={12} />
                           </button>
                         </span>
                       ))
